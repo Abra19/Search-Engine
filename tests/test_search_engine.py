@@ -27,3 +27,9 @@ def test_search_empty(docs):
 def test_search_negative(docs):
     expected = []
     assert search(docs, 'mum') == expected
+
+
+def test_search_with_punctuation(docs):
+    expected = ['doc1']
+    assert search(docs, 'pint!') == expected
+    assert search(docs, 'pint') == expected
