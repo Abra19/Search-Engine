@@ -15,7 +15,7 @@ def docs():
 
 
 def test_search_positive(docs):
-    expected = ['doc1', 'doc2']
+    expected = ['doc2', 'doc1']
     assert search(docs, 'shoot') == expected
 
 
@@ -24,12 +24,20 @@ def test_search_empty(docs):
     assert search(docs, '') == expected
 
 
+def test_search_in_empty(docs):
+    expected = []
+    assert search([], 'text') == expected
+
+
 def test_search_negative(docs):
     expected = []
     assert search(docs, 'mum') == expected
 
 
 def test_search_with_punctuation(docs):
-    expected = ['doc1']
-    assert search(docs, 'pint!') == expected
-    assert search(docs, 'pint') == expected
+    expected1 = ['doc1']
+    expected2 = ['doc2']
+    assert search(docs, 'pint!') == expected1
+    assert search(docs, 'pint') == expected1
+    assert search(docs, 'me.') == expected2
+    assert search(docs, 'me') == expected2
