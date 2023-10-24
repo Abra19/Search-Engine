@@ -41,3 +41,8 @@ def test_search_with_punctuation(docs):
     assert search(docs, 'pint') == expected1
     assert search(docs, 'me.') == expected2
     assert search(docs, 'me') == expected2
+
+
+def test_search_sentence(docs):
+    expected = ['doc2', 'doc1']
+    assert search(docs, 'shoot at me') == expected
