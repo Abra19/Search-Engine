@@ -1,38 +1,36 @@
 import re
-from collections import defaultdict
+from functools import reduce
 
 
 def clean_text(text):
     return re.sub(r'[^\w\s]', '', text).lower()
 
 
-def make_dict(text):
+def make_index(text, index):
     cleaned_texts = clean_text(text).split(' ')
-    word_count = defaultdict(int)
-    for word in cleaned_texts:
-        word_count[word] += 1
-    return word_count
-
-
-def count_words_in_text(text, words):
-    dictionary = {word: text['text'][word] for word in words}
-    values = dictionary.values()
-    return (min(values), sum(values))
+    result = {}
+    for el in cleaned_texts:
+        result[el] = result.get(el, []) + [index]
+    return result
 
 
 def search(docs, sample):
     if sample == '':
         return [doc['id'] for doc in docs]
 
-    token_dict = make_dict(sample)
-    docs_dict = map(
-        lambda doc: {**doc, 'text': make_dict(doc['text'])}, docs
-    )
+    tokens = clean_text(sample).split(' ')
 
-    doc_infos = map(
-        lambda el: (el['id'], *count_words_in_text(el, token_dict)),
-        docs_dict
-    )
-    filtered = filter(lambda el: el[2] != 0, list(doc_infos))
-    sorted_all = sorted(list(filtered), key=lambda el: el[2], reverse=True)
-    return [el[0] for el in sorted_all]
+    index = {}
+    for doc in docs:
+        current = make_index(doc['text'], doc['id'])
+        index = {
+            key: index.get(key, []) + current.get(key, [])
+            for key in set(index.keys()).union(current.keys())
+        }
+
+    meets = reduce(lambda acc, token: [*acc, *index.get(token, [])], tokens, [])
+    frequencies = [(meet, meets.count(meet)) for meet in set(meets)]
+    return [
+        el[0]
+        for el in sorted(frequencies, key=lambda el: el[1], reverse=True)
+    ]
