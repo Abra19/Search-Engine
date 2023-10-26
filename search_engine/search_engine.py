@@ -1,5 +1,5 @@
+import math
 import re
-from functools import reduce
 
 
 def clean_text(text):
@@ -8,9 +8,11 @@ def clean_text(text):
 
 def make_index(text, index):
     cleaned_texts = clean_text(text).split(' ')
+    length = len(cleaned_texts)
     result = {}
     for el in cleaned_texts:
-        result[el] = result.get(el, []) + [index]
+        tf = cleaned_texts.count(el) / length
+        result[el] = [(index, tf)]
     return result
 
 
@@ -28,9 +30,22 @@ def search(docs, sample):
             for key in set(index.keys()).union(current.keys())
         }
 
-    meets = reduce(lambda acc, token: [*acc, *index.get(token, [])], tokens, [])
-    frequencies = [(meet, meets.count(meet)) for meet in set(meets)]
-    return [
-        el[0]
-        for el in sorted(frequencies, key=lambda el: el[1], reverse=True)
-    ]
+    length = len(docs)
+    token_params = []
+    for token in tokens:
+        token_index = index.get(token, [])
+        docs_count = len(token_index)
+        idf = math.log2(1 + (length - docs_count + 1) / (docs_count + 0.5))
+        token_params.extend([(id, tf * idf) for (id, tf) in token_index])
+
+    result = {}
+    for (id, params) in token_params:
+        result[id] = result.get(id, 0) + params
+
+    sorted_result = sorted(
+        result.items(),
+        key=lambda item: item[1],
+        reverse=True
+    )
+
+    return [key for (key, _) in sorted_result]
